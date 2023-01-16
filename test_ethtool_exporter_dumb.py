@@ -57,7 +57,7 @@ def check_exporter(current_func_name, nic_type, custom_args_dict={}):
 # This test can be passed only on linux
 def test_find_physical_interfaces():
     ethtool_collector = EthtoolCollector(Namespace(**default_args_dict), "tests/stub_ethtool.sh")
-    interfaces = ethtool_collector.find_physical_interfaces()
+    interfaces = list(ethtool_collector.find_physical_interfaces())
 
 @pytest.mark.parametrize("nic_type", nic_type_list)
 @pytest.mark.parametrize("custom_args", [{}])
