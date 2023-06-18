@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.8.1...v0.9.0) (2023-06-18)
+
+
+### Features
+
+* add python 3.11 tests ([e772724](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/e772724c72c6422b96c752a874ed45277d887077))
+
+
+### Bug Fixes
+
+* move python 3.10 to cimb ([9c78e8a](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/9c78e8a5c2b6a81d85acf5981f755464c0f82710))
+
 ## [0.8.1](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.8.0...v0.8.1) (2023-06-18)
 
 
