@@ -35,10 +35,8 @@ jobs:
       - image: circleci/python:3.9
     steps: *test_python_steps
   test_python_3_10:
-    environment:
-      SUDO_COMMAND: "sudo "
     docker:
-      - image: circleci/python:3.10
+      - image: cimg/python:3.10.12
     steps: *test_python_steps
   test_python_3_11:
     docker:
