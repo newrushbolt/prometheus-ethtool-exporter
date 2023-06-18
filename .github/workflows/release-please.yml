@@ -12,10 +12,9 @@ name: release-please
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: google-github-actions/release-please-action@v3
         with:
           release-type: python
           package-name: prometheus-ethtool-exporter
-          skip-github-release: true
