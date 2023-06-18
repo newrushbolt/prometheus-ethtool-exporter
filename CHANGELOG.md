@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.8.0...v0.8.1) (2023-06-18)
+
+
+### Bug Fixes
+
+* release enable tagging ([7ad3ffc](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/7ad3ffc12e6804c7ac808697e8404ec738b7d720))
+
 ## [0.8.0](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.7.0...v0.8.0) (2023-06-18)
 
 
