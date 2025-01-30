@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Collect ethtool metrics,publish them via http or save them to a file."""
 import os
 import time
@@ -18,6 +19,13 @@ from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 # Workarounds for python<3.9
 from typing import List, Optional, Union, Iterator
 
+
+def error_with_nice_trace(logger: Logger, msg: str, exc: Exception):
+    if logger.level == DEBUG:
+        logger.error(msg, exc_info=exc)
+    else:
+        exc_msg = f'{exc.__class__.__name__}: {exc.args}'
+        logger.error("%s: %s", msg, exc_msg)
 
 class EthtoolCollector:
     """Collect ethtool metrics,publish them via http or save them to a file."""
@@ -200,8 +208,9 @@ class EthtoolCollector:
             try:
                 # Validate value to catch Exception early
                 metric_data = {"labels": labels, "value": float(value)}
-            except Exception as exc:
-                self.logger.warning('Failed adding metrics labels=%s, value=%s', labels, value, exc_info=exc)
+            except Exception:
+                log_exception_info = self.logger.level == DEBUG
+                self.logger.warning('Failed adding metrics labels=%s, value=%s', labels, value, exc_info=log_exception_info)
                 continue
 
             if queued_key not in metrics:
@@ -431,7 +440,8 @@ class EthtoolCollector:
                     self.update_basic_info(interface, basic_info)
                     self.update_collection_timestamp(interface, collection_timestamps, 'interface_info')
                 except Exception as exc:
-                    self.logger.error("Cannot get interface_info", exc_info=exc)
+                    error_with_nice_trace(self.logger, "Cannot get interface_info", exc)
+
             yield basic_info
 
         if self.args.collect_sfp_diagnostics:
@@ -455,7 +465,7 @@ class EthtoolCollector:
                     self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
                     self.update_collection_timestamp(interface, collection_timestamps, 'sfp_diagnostics')
                 except Exception as exc:
-                    self.logger.error("Cannot get sfp_diagnostics", exc_info=exc)
+                    error_with_nice_trace(self.logger, "Cannot get sfp_diagnostics", exc)
             yield xcvr_info
             yield sensors
             yield alarms
@@ -472,7 +482,7 @@ class EthtoolCollector:
                     self.update_ethtool_stats(interface, gauge)
                     self.update_collection_timestamp(interface, collection_timestamps, 'interface_statistics')
                 except Exception as exc:
-                    self.logger.error("Cannot get interface_statistics", exc_info=exc)
+                    error_with_nice_trace(self.logger, "Cannot get interface_statistics", exc)
             yield gauge
 
         if self.args.textfile_name:
