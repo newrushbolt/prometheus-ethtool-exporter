@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.9.0...v0.9.1) (2025-01-30)
+
+
+### Bug Fixes
+
+* log full trace only in debug mode ([681384c](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/681384cadb3430023059a11c1356f0903d539398))
+
 ## [0.9.0](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.8.1...v0.9.0) (2023-06-18)
 
 
