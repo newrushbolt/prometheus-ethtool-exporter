@@ -36,11 +36,15 @@ jobs:
     steps: *test_python_steps
   test_python_3_10:
     docker:
-      - image: cimg/python:3.10.12
+      - image: cimg/python:3.10.16
     steps: *test_python_steps
   test_python_3_11:
     docker:
-      - image: cimg/python:3.11.4
+      - image: cimg/python:3.11.11
+    steps: *test_python_steps
+  test_python_3_12:
+    docker:
+      - image: cimg/python:3.12.8
     steps: *test_python_steps
 workflows:
   main:
@@ -51,3 +55,4 @@ workflows:
       - test_python_3_9
       - test_python_3_10
       - test_python_3_11
+      - test_python_3_12
