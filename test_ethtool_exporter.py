@@ -240,10 +240,16 @@ class TestEthtoolCollector:
         nic_type = collector_args.interface_regex
         textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
         write_to_textfile(textfile_name, registry)
-        assert "Cannot get interface_info" in caplog.text
-        assert "Cannot get sfp_diagnostics" in caplog.text
-        assert "Cannot get interface_statistics" in caplog.text
-        assert "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xfd in position 0: invalid start byte" in caplog.text
+        log_lines = caplog.text.splitlines()
+        assert len(log_lines) == 3
+        
+        assert 'Cannot get interface_info: Exception:' in log_lines[0]
+        assert 'Ethtool with keys <> failed for interface <i40e28_sfp_non_existent>' in log_lines[0]
+
+        assert 'Cannot get sfp_diagnostics: Exception:' in log_lines[1]
+        assert 'Ethtool with keys <-m> failed for interface <i40e28_sfp_non_existent>' in log_lines[1]
+
+        assert 'Cannot get interface_statistics: UnicodeDecodeError:' in log_lines[2]
 
     def test_unfindable_ethtool(self):
         from ethtool_exporter import _get_ethtool_path
