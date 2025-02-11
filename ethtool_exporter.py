@@ -5,8 +5,8 @@ import os
 import time
 import re
 from argparse import ArgumentParser, Namespace
-from distutils.spawn import find_executable
 from logging import CRITICAL, DEBUG, INFO, Logger, getLogger
+from shutil import which
 from subprocess import PIPE, Popen
 from sys import argv, exit
 from time import sleep
@@ -638,7 +638,7 @@ def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
 def _get_ethtool_path():
     path = ":".join([os.environ.get("PATH", ""), "/usr/sbin", "/sbin"])
     # Try to find the executable of ethtool.
-    ethtool = find_executable("ethtool", path)
+    ethtool = which("ethtool", path=path)
     if ethtool is None:
         exit("Error: cannot find ethtool.")
     return ethtool # pragma: no cover
