@@ -58,4 +58,4 @@ optional arguments:
 
 # Blog
 Blogpost describing how we debugged a production issue with the help of this
-exporter is [published on our blog](https://shw.mx/ethtool).
+exporter is [published on our blog](https://web.archive.org/web/20210622161115/https://tech.showmax.com/2018/11/scraping-ethtool-data-into-prometheus/) (archived version as Showmax tech blog is gone).
