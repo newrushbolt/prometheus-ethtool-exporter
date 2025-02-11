@@ -1,23 +1,46 @@
 #!/usr/bin/env python
 """Setup.py for setuptools and debian packaging."""
 from setuptools import find_packages, setup
-from subprocess import CalledProcessError, check_output
+from subprocess import CalledProcessError, DEVNULL, check_output
 
 
-def version():
+def git_branch():
     try:
-        version = (
-            check_output(["git", "describe", "--exact-match", "--tags"])
+        branch = (
+            check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+            .decode("utf-8")[:8]
+            .strip()
+        )
+    except (CalledProcessError, FileNotFoundError):
+        branch = "unknown"
+    return branch
+
+
+def git_commit():
+    try:
+        sha = check_output(["git", "rev-parse", "HEAD"]).decode("utf-8")[:8].strip()
+    except (CalledProcessError, FileNotFoundError):
+        sha = "unknown"
+    return sha
+
+
+def git_tag():
+    try:
+        tag = (
+            check_output(["git", "describe", "--exact-match", "--tags"], stderr=DEVNULL)
             .decode("utf-8")
             .lstrip("v")
             .strip()
         )
     except (CalledProcessError, FileNotFoundError):
-        version = "unknown"
-    try:
-        sha = check_output(["git", "rev-parse", "HEAD"]).decode("utf-8")[:8]
-    except (CalledProcessError, FileNotFoundError):
-        sha = "unknown"
+        tag = ""
+    return tag
+
+
+def version():
+    tag = git_tag()
+    version = tag if tag else git_branch()
+    sha = git_commit()
     return f"{version}+{sha}"
 
 
