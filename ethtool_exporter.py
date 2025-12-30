@@ -244,6 +244,12 @@ class EthtoolCollector:
         if not driver_data:
             return
 
+        permanent_address_data = b""
+        if self.args.collect_interface_permanent_mac_info:
+            permanent_address_data = self.run_ethtool(interface, "-P")
+            if not permanent_address_data:
+                return
+
         labels = {"device": interface}
         for line in iface_data.decode("utf-8").splitlines():
             line = line.strip()
@@ -269,8 +275,8 @@ class EthtoolCollector:
                 continue
             labels[key] = value
 
-        driver_data_fields = ["driver", "version", "firmware_version"]
-        for raw_line in driver_data.decode("utf-8").splitlines():
+        driver_data_fields = ["driver", "version", "firmware_version", "permanent_address"]
+        for raw_line in driver_data.decode("utf-8").splitlines() + permanent_address_data.decode("utf-8").splitlines():
             try:
                 line = raw_line.strip()
                 key_val = self._parse_key_value_line(line)
@@ -553,6 +559,14 @@ def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
         action="store_true",
         default=True,
         help="Collect interface common info from `ethtool <interface_name>`",
+    )
+    parser.add_argument(
+        "--collect-interface-permanent-mac-info",
+        action="store_true",
+        default=True,
+        help=(
+            "Collect interface permanent address to common info from `ethtool -P <interface_name>`"
+        ),
     )
     parser.add_argument(
         "--collect-sfp-diagnostics",

@@ -38,6 +38,7 @@ class TestEthtoolCollector:
         "collect_interface_statistics": True,
         "collect_interface_info": True,
         "collect_sfp_diagnostics": True,
+        "collect_interface_permanent_mac_info": False,
         "summarize_queues": True,
         "textfile_name": "/dev/null"
     }
@@ -100,7 +101,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": True,
+                "collect_interface_statistics": False, "collect_interface_info": False, "collect_sfp_diagnostics": True,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -114,7 +115,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": False, "collect_interface_info":True, "collect_sfp_diagnostics": False,
+                "collect_interface_statistics": False, "collect_interface_info": True, "collect_interface_permanent_mac_info": True, "collect_sfp_diagnostics": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -128,7 +129,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": True, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_interface_statistics": True, "collect_interface_info": False, "collect_sfp_diagnostics": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -142,7 +143,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_interface_statistics": False, "collect_interface_info": False, "collect_sfp_diagnostics": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
