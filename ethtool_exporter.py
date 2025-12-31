@@ -244,12 +244,6 @@ class EthtoolCollector:
         if not driver_data:
             return
 
-        permanent_address_data = b""
-        if self.args.collect_interface_permanent_mac_info:
-            permanent_address_data = self.run_ethtool(interface, "-P")
-            if not permanent_address_data:
-                return
-
         labels = {"device": interface}
         for line in iface_data.decode("utf-8").splitlines():
             line = line.strip()
@@ -275,8 +269,8 @@ class EthtoolCollector:
                 continue
             labels[key] = value
 
-        driver_data_fields = ["driver", "version", "firmware_version", "permanent_address"]
-        for raw_line in driver_data.decode("utf-8").splitlines() + permanent_address_data.decode("utf-8").splitlines():
+        driver_data_fields = ["driver", "version", "firmware_version"]
+        for raw_line in driver_data.decode("utf-8").splitlines():
             try:
                 line = raw_line.strip()
                 key_val = self._parse_key_value_line(line)
@@ -289,7 +283,23 @@ class EthtoolCollector:
             except Exception:   # pragma: no cover
                 self.logger.warning('Failed to parse driver info in: %s', raw_line)
                 continue
+
+        if self.args.collect_interface_permanent_mac_info:
+            key = "permanent_address"
+            perm_path = os.path.join(self.interface_discovery_dir, interface, "bonding_slave", "perm_hwaddr")
+            addr_path = os.path.join(self.interface_discovery_dir, interface, "address")
+            value = self._read_file_value(perm_path) or self._read_file_value(addr_path)
+            if value:
+                labels[key] = value
+
         info.add_metric(labels.values(), labels)
+
+    def _read_file_value(self, path: str) -> str:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except (FileNotFoundError, PermissionError, OSError):
+            return ""
 
     def _parse_key_value_line(self, line) -> Optional[List[str]]:
         """Parse key: value from line if possible.
@@ -565,7 +575,9 @@ def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
         action="store_true",
         default=True,
         help=(
-            "Collect interface permanent address to common info from `ethtool -P <interface_name>`"
+            "Collect interface permanent address to common info from \
+            `/sys/class/net/<interface_name>/bonding_slave/perm_hwaddr` \
+            or `/sys/class/net/<interface_name>/address`"
         ),
     )
     parser.add_argument(

@@ -62,4 +62,4 @@ exporter is [published on our blog](https://web.archive.org/web/20210622161115/h
 
 ## Tests
 
-1. Run with python 3.10 using `pytest`
+1. Run with `pytest`

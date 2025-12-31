@@ -4,7 +4,7 @@ import os
 from shutil import rmtree
 from argparse import Namespace
 from subprocess import Popen, PIPE
-from typing import List
+from pathlib import Path
 
 import pytest
 from prometheus_client import CollectorRegistry, write_to_textfile
@@ -38,16 +38,23 @@ class TestEthtoolCollector:
         "collect_interface_statistics": True,
         "collect_interface_info": True,
         "collect_sfp_diagnostics": True,
-        "collect_interface_permanent_mac_info": False,
+        "collect_interface_permanent_mac_info": True,
         "summarize_queues": True,
         "textfile_name": "/dev/null"
     }
+    test_default_sys_class_net = ".tests/sys_class_net"
 
     def prepare_pseudo_sys_class_net_dir(self):
-        os.mkdir(".tests/sys_class_net")
+        base_dir = Path(__file__).resolve().parent
+        os.mkdir(self.test_default_sys_class_net)
+        path = Path("tests/sys_class_net")
+        folders = [p.name for p in path.iterdir() if p.is_dir()]
         for nic_type in self.default_nic_types:
-            os.symlink("/dev/null", f".tests/sys_class_net/{nic_type}")
-        os.symlink("/dev/null", f".tests/sys_class_net/i40e28_sfp_non_existent")
+            if nic_type in folders:
+                os.symlink(f"{base_dir}/tests/sys_class_net/{nic_type}", f"{base_dir}/{self.test_default_sys_class_net}/{nic_type}", target_is_directory=True)
+            else:
+                os.symlink("/dev/null", f"{self.test_default_sys_class_net}/{nic_type}")
+        os.symlink("/dev/null", f"{self.test_default_sys_class_net}/i40e28_sfp_non_existent")
 
     @classmethod
     def setup_class(cls):
@@ -65,7 +72,7 @@ class TestEthtoolCollector:
         collector_args = Namespace(**collector_args_dict)
 
         ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
-        ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+        ethtool_collector.interface_discovery_dir = self.test_default_sys_class_net
 
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
@@ -101,7 +108,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": False, "collect_interface_info": False, "collect_sfp_diagnostics": True,
+                "collect_interface_statistics": False, "collect_interface_info": False, "collect_sfp_diagnostics": True, "collect_interface_permanent_mac_info": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -115,7 +122,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "collect_interface_statistics": False, "collect_interface_info": True, "collect_interface_permanent_mac_info": True, "collect_sfp_diagnostics": False,
+                "collect_interface_statistics": False, "collect_interface_info": True, "collect_sfp_diagnostics": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -189,7 +196,7 @@ class TestEthtoolCollector:
 
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             ethtool_collector = EthtoolCollector(collector_args, "/whatever/stub_ethtool.sh")
-            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+            ethtool_collector.interface_discovery_dir = self.test_default_sys_class_net
             registry = CollectorRegistry()
             registry.register(ethtool_collector)
             nic_type = collector_args.interface_regex
@@ -212,8 +219,8 @@ class TestEthtoolCollector:
         collector_args = Namespace(**collector_args_dict)
 
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            ethtool_collector = EthtoolCollector(collector_args, ".tests/sys_class_net")
-            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+            ethtool_collector = EthtoolCollector(collector_args, self.test_default_sys_class_net)
+            ethtool_collector.interface_discovery_dir = self.test_default_sys_class_net
             registry = CollectorRegistry()
             registry.register(ethtool_collector)
             nic_type = collector_args.interface_regex
@@ -235,7 +242,7 @@ class TestEthtoolCollector:
         collector_args = Namespace(**collector_args_dict)
 
         ethtool_collector = EthtoolCollector(collector_args, "xz")
-        ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+        ethtool_collector.interface_discovery_dir = self.test_default_sys_class_net
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
         nic_type = collector_args.interface_regex
