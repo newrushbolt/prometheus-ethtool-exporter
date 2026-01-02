@@ -4,6 +4,8 @@
 import os
 import time
 import re
+import signal
+import threading
 from argparse import ArgumentParser, Namespace
 from distutils.spawn import find_executable
 from logging import CRITICAL, DEBUG, INFO, Logger, getLogger
@@ -18,6 +20,15 @@ from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 
 # Workarounds for python<3.9
 from typing import List, Optional, Union, Iterator
+
+stop_event = threading.Event()
+
+def _handle_stop(signum, frame):
+    stop_event.set()
+
+signal.signal(signal.SIGTERM, _handle_stop)
+signal.signal(signal.SIGINT, _handle_stop)
+signal.signal(signal.SIGHUP, _handle_stop)
 
 
 def error_with_nice_trace(logger: Logger, msg: str, exc: Exception):
@@ -698,18 +709,18 @@ def main():  # pragma: no cover
         collector.logger.debug(f"Serving metrics on {ip}:{port}")
         # Expose metrics on port and ip.
         start_http_server(port, ip, registry=registry)
-        while True:
-            sleep(collector.args.interval)
+        while not stop_event.is_set():
+            stop_event.wait(collector.args.interval)
 
     # If arguments for serving to file are present we use them.
     if collector.args.textfile_name:
         collector.logger.debug(f"Putting metrics into {collector.args.textfile_name}")
-        while True:
+        while not stop_event.is_set():
             collector.collect()
             write_to_textfile(collector.args.textfile_name, registry)
             if collector.args.oneshot:
                 exit(0)
-            sleep(collector.args.interval)
+            stop_event.wait(collector.args.interval)
 
 if __name__ == "__main__":   # pragma: no cover
     main()
