@@ -1,10 +1,12 @@
 
 import inspect
 import os
+import sys
+import signal
+import time
 from shutil import rmtree
 from argparse import Namespace
-from subprocess import Popen, PIPE
-from typing import List
+from subprocess import Popen, PIPE, TimeoutExpired
 
 import pytest
 from prometheus_client import CollectorRegistry, write_to_textfile
@@ -39,7 +41,8 @@ class TestEthtoolCollector:
         "collect_interface_info": True,
         "collect_sfp_diagnostics": True,
         "summarize_queues": True,
-        "textfile_name": "/dev/null"
+        "textfile_name": "/dev/null",
+        "sys_class_net_path": ".tests/sys_class_net"
     }
 
     def prepare_pseudo_sys_class_net_dir(self):
@@ -64,7 +67,6 @@ class TestEthtoolCollector:
         collector_args = Namespace(**collector_args_dict)
 
         ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
-        ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
 
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
@@ -188,7 +190,6 @@ class TestEthtoolCollector:
 
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             ethtool_collector = EthtoolCollector(collector_args, "/whatever/stub_ethtool.sh")
-            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
             registry = CollectorRegistry()
             registry.register(ethtool_collector)
             nic_type = collector_args.interface_regex
@@ -205,14 +206,13 @@ class TestEthtoolCollector:
             }
         ]
     )
-    def test_unexeceable_ethtool(self, custom_args):
+    def test_unexecutable_ethtool(self, custom_args):
         current_func_name = inspect.currentframe().f_code.co_name
         collector_args_dict = {**self.default_args_dict, **custom_args}
         collector_args = Namespace(**collector_args_dict)
 
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             ethtool_collector = EthtoolCollector(collector_args, ".tests/sys_class_net")
-            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
             registry = CollectorRegistry()
             registry.register(ethtool_collector)
             nic_type = collector_args.interface_regex
@@ -234,7 +234,6 @@ class TestEthtoolCollector:
         collector_args = Namespace(**collector_args_dict)
 
         ethtool_collector = EthtoolCollector(collector_args, "xz")
-        ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
         nic_type = collector_args.interface_regex
@@ -242,7 +241,7 @@ class TestEthtoolCollector:
         write_to_textfile(textfile_name, registry)
         log_lines = caplog.text.splitlines()
         assert len(log_lines) == 3
-        
+
         assert 'Cannot get interface_info: Exception:' in log_lines[0]
         assert 'Ethtool with keys <> failed for interface <i40e28_sfp_non_existent>' in log_lines[0]
 
@@ -261,3 +260,92 @@ class TestEthtoolCollector:
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             main()
         assert pytest_wrapped_e.value.code == 2
+
+
+class TestSIGTERMHandling:
+
+    def test_exporter_handles_sigterm_in_textfile_mode(self, tmp_path):
+        """Test that main() registers SIGTERM handler when running in textfile mode."""
+        # Set up test environment
+        sys_net_dir = tmp_path / "sys" / "class" / "net"
+        sys_net_dir.mkdir(parents=True)
+        (sys_net_dir / "eth0").write_text("")
+        out_file = tmp_path / "metrics.prom"
+
+        # Create environment for subprocess
+        env = os.environ.copy()
+        env["PATH"] = 'tests/bin' + os.pathsep + env.get("PATH", "")
+
+        # Run exporter in subprocess with long interval
+        cmd = [
+            sys.executable, "-m", "ethtool_exporter",
+            f"--textfile-name={out_file}",
+            "--interval=100",
+            f"--sys-class-net-path={sys_net_dir}"
+        ]
+
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, env=env)
+
+        # Wait for metrics file to be created
+        deadline = time.time() + 5
+        while time.time() < deadline and not out_file.exists():
+            time.sleep(0.1)
+
+        assert out_file.exists(), "Exporter failed to create metrics file"
+
+        # Send SIGTERM
+        os.kill(proc.pid, signal.SIGTERM)
+
+        # Wait for process to exit
+        try:
+            proc.wait(timeout=2)
+        except TimeoutExpired:
+            proc.kill()
+            pytest.fail("Process did not exit after SIGTERM - handler not working")
+
+        # With proper signal handling, should exit with code 0, not -15
+        assert proc.returncode == 0, \
+            f"Process exited with code {proc.returncode}, expected 0 (got {-proc.returncode} means killed by signal)"
+
+    def test_exporter_gracefully_exits_on_sigterm(self, tmp_path):
+        """Test that exporter exits cleanly on SIGTERM (not killed by signal)."""
+        # Set up test environment
+        sys_net_dir = tmp_path / "sys" / "class" / "net"
+        sys_net_dir.mkdir(parents=True)
+        (sys_net_dir / "eth0").write_text("")
+        out_file = tmp_path / "metrics.prom"
+
+        # Create environment for subprocess
+        env = os.environ.copy()
+        env["PATH"] = 'tests/bin' + os.pathsep + env.get("PATH", "")
+
+        # Run exporter in subprocess with long interval
+        cmd = [
+            sys.executable, "-m", "ethtool_exporter",
+            f"--textfile-name={out_file}",
+            "--interval=100",
+            f"--sys-class-net-path={sys_net_dir}"
+        ]
+
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, env=env)
+
+        # Wait for metrics file to be created
+        deadline = time.time() + 5
+        while time.time() < deadline and not out_file.exists():
+            time.sleep(0.1)
+
+        assert out_file.exists(), "Exporter failed to create metrics file"
+
+        # Send SIGTERM
+        os.kill(proc.pid, signal.SIGTERM)
+
+        # Wait for process to exit
+        try:
+            proc.wait(timeout=2)
+        except TimeoutExpired:
+            proc.kill()
+            pytest.fail("Process did not exit after SIGTERM - signal handler not implemented")
+
+        # With proper signal handling, exit code should be 0
+        assert proc.returncode == 0, \
+            f"Process exited with code {proc.returncode}, expected 0 (signal {-proc.returncode} means killed by signal)"
