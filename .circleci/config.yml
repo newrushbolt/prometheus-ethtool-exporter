@@ -5,6 +5,7 @@ version: 2.1
   - run: "${SUDO_COMMAND}pip install -r requirements.txt -r test-requirements.txt"
   - run: pytest -v --cov=ethtool_exporter --cov-fail-under=92
   - run: python ethtool_exporter.py --help
+  - run: pip install .
 
 environment:
   SUDO_COMMAND: ""
