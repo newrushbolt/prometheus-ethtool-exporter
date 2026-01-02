@@ -34,6 +34,9 @@ optional arguments:
                         Collect interface statistics from `ethtool -S <interface_name>`
   --collect-interface-info
                         Collect interface common info from `ethtool <interface_name>`
+  --collect-interface-permanent-mac-info
+                        Collect interface permanent address to common info from `/sys/class/net/<interface_name>/bonding_slave/perm_hwaddr` or
+                        `/sys/class/net/<interface_name>/address`
   --collect-sfp-diagnostics
                         Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible
   -f TEXTFILE_NAME, --textfile-name TEXTFILE_NAME
