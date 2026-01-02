@@ -34,6 +34,9 @@ optional arguments:
                         Collect interface statistics from `ethtool -S <interface_name>`
   --collect-interface-info
                         Collect interface common info from `ethtool <interface_name>`
+  --collect-interface-permanent-mac-info
+                        Collect interface permanent address to common info from `/sys/class/net/<interface_name>/bonding_slave/perm_hwaddr` or
+                        `/sys/class/net/<interface_name>/address`
   --collect-sfp-diagnostics
                         Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible
   -f TEXTFILE_NAME, --textfile-name TEXTFILE_NAME
@@ -59,3 +62,7 @@ optional arguments:
 # Blog
 Blogpost describing how we debugged a production issue with the help of this
 exporter is [published on our blog](https://web.archive.org/web/20210622161115/https://tech.showmax.com/2018/11/scraping-ethtool-data-into-prometheus/) (archived version as Showmax tech blog is gone).
+
+## Tests
+
+1. Run with `pytest`
