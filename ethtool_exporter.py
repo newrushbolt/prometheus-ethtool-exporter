@@ -2,15 +2,16 @@
 
 """Collect ethtool metrics,publish them via http or save them to a file."""
 import os
+import signal
 import time
 import re
+
 from argparse import ArgumentParser, Namespace
 from logging import CRITICAL, DEBUG, INFO, Logger, getLogger
 from shutil import which
 from subprocess import PIPE, Popen
 from sys import argv, exit
 from time import sleep
-from typing import Iterator, Optional, Union
 
 from prometheus_client import CollectorRegistry, start_http_server, write_to_textfile
 from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
@@ -102,8 +103,6 @@ class EthtoolCollector:
             for base in self.xcvr_alarms_base
             for alarm in self.xcvr_alarms_ext
         ]
-        # Allow to override in tests
-        self.interface_discovery_dir = '/sys/class/net'
 
         self.ethtool = ethtool_path
         self.args: Namespace = args
@@ -435,7 +434,7 @@ class EthtoolCollector:
             basic_info = InfoMetricFamily(
                 "node_net_ethtool", "Ethtool device information", labels=["device"]
             )
-            for interface in self.find_physical_interfaces():
+            for interface in list(self.find_physical_interfaces()):
                 try:
                     self.update_basic_info(interface, basic_info)
                     self.update_collection_timestamp(interface, collection_timestamps, 'interface_info')
@@ -460,7 +459,7 @@ class EthtoolCollector:
                 "Ethtool transceiver sensor alarms",
                 labels=["device", "type"],
             )
-            for interface in self.find_physical_interfaces():
+            for interface in list(self.find_physical_interfaces()):
                 try:
                     self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
                     self.update_collection_timestamp(interface, collection_timestamps, 'sfp_diagnostics')
@@ -477,7 +476,7 @@ class EthtoolCollector:
             gauge = GaugeMetricFamily(
                 "node_net_ethtool", "Ethtool data", labels=gauge_label_list
             )
-            for interface in self.find_physical_interfaces():
+            for interface in list(self.find_physical_interfaces()):
                 try:
                     self.update_ethtool_stats(interface, gauge)
                     self.update_collection_timestamp(interface, collection_timestamps, 'interface_statistics')
@@ -488,14 +487,14 @@ class EthtoolCollector:
         if self.args.textfile_name:
             yield collection_timestamps
 
-    def find_physical_interfaces(self) -> List[str]:
+    def find_physical_interfaces(self) -> Iterator[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
-        for file in os.listdir(self.interface_discovery_dir):
-            path = os.path.join(self.interface_discovery_dir, file)
+        for file in os.listdir(self.args.sys_class_net_path):
+            path = os.path.join(self.args.sys_class_net_path, file)
             if os.path.islink(path) and 'virtual' not in os.readlink(path):
                 if re.match(self.args.interface_regex, file):
-                    yield file
+                    yield str(file)
 
 # Disabling coverage check for this one because it's hard to cover and the argument logic is broken already.
 # TODO: rework arg parser, drop legacy options, add coverage
@@ -628,6 +627,15 @@ def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
             "-w and -b are mutually exclusive"
         ),
     )
+    parser.add_argument(
+        "--sys-class-net-path",
+        default='/sys/class/net',
+        help=(
+            "Path to /sys/class/net."
+            "Should be only changed if run in container or for testing"
+        )
+    )
+
     parsed_arguments = parser.parse_args(arguments)
     _check_parsed_arguments(parser, parsed_arguments)
     # Set default value if none is set after validation.
@@ -645,7 +653,12 @@ def _get_ethtool_path():
 
 
 def main():  # pragma: no cover
-    # Process CLI args
+    def handle_sigterm(*_):
+        exit(0)
+
+    # Register signal handler for SIGTERM
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
     ethtool_collector_args = _parse_arguments(argv[1:])
 
     # Create new instance of EthtoolCollector.
@@ -670,20 +683,30 @@ def main():  # pragma: no cover
         # Remove optional IPv6 braces if present, i.e. [::1] => ::1
         ip = ip.replace("[", "").replace("]", "")
         collector.logger.debug(f"Serving metrics on {ip}:{port}")
-        # Expose metrics on port and ip.
-        start_http_server(port, ip, registry=registry)
+
+        server, thread_obj = start_http_server(port, ip, registry=registry)
         while True:
-            sleep(collector.args.interval)
+            try:
+                sleep(1)
+            except (KeyboardInterrupt, SystemExit):
+                break
+        server.shutdown()
+        thread_obj.join(1.0)
+        exit(0)
 
     # If arguments for serving to file are present we use them.
     if collector.args.textfile_name:
         collector.logger.debug(f"Putting metrics into {collector.args.textfile_name}")
         while True:
-            collector.collect()
-            write_to_textfile(collector.args.textfile_name, registry)
-            if collector.args.oneshot:
-                exit(0)
-            sleep(collector.args.interval)
+            try:
+                collector.collect()
+                write_to_textfile(collector.args.textfile_name, registry)
+                if collector.args.oneshot:
+                    exit(0)
+                sleep(collector.args.interval)
+            except (KeyboardInterrupt, SystemExit):
+                break
+        exit(0)
 
 if __name__ == "__main__":   # pragma: no cover
     main()
