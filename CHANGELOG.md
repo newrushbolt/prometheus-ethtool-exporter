@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.2](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.9.1...v0.9.2) (2026-01-03)
+
+
+### Bug Fixes
+
+* allow direct git+https install ([e2c1846](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/e2c1846dd3cf3b880ae4236fa2f872545dbbaa7b))
+* handle-sigterm ([1c1f514](https://github.com/newrushbolt/prometheus-ethtool-exporter/commit/1c1f514f5a96c1ff0ec4e8289eb2d12ea1af00f9))
+
 ## [0.9.1](https://github.com/newrushbolt/prometheus-ethtool-exporter/compare/v0.9.0...v0.9.1) (2025-01-30)
 
 
