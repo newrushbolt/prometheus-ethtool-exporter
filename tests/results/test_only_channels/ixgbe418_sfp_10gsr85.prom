@@ -1,0 +1,9 @@
+# HELP node_net_ethtool_channels Ethtool number of channels
+# TYPE node_net_ethtool_channels gauge
+node_net_ethtool_channels{device="ixgbe418_sfp_10gsr85",type="other_max"} 1.0
+node_net_ethtool_channels{device="ixgbe418_sfp_10gsr85",type="combined_max"} 63.0
+node_net_ethtool_channels{device="ixgbe418_sfp_10gsr85",type="other_current"} 1.0
+node_net_ethtool_channels{device="ixgbe418_sfp_10gsr85",type="combined_current"} 48.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="channels",device="ixgbe418_sfp_10gsr85"} 1.678287354e+09

@@ -1,0 +1,11 @@
+Channel parameters for igb56_int_tp:
+Pre-set maximums:
+RX:		n/a
+TX:		n/a
+Other:		1
+Combined:	8
+Current hardware settings:
+RX:		n/a
+TX:		n/a
+Other:		1
+Combined:	8

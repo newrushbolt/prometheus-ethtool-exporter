@@ -1,0 +1,11 @@
+Ring parameters for i40e21_int_tp:
+Pre-set maximums:
+RX:			4096
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			4096
+Current hardware settings:
+RX:			512
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			512

@@ -1,0 +1,9 @@
+Ring parameters for i40e21_int_broken:
+RX:			1024
+Pre-set maximums:
+RX:			4096
+RX Mini:
+TX:			broken
+Current hardware settings:
+RX:			512
+TX:			512

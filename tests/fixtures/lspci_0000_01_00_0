@@ -1,0 +1,9 @@
+Slot:	01:00.0
+Class:	Ethernet controller
+Vendor:	Intel Corporation
+Device:	I350 Gigabit Network Connection
+SVendor:	Intel Corporation
+SDevice:	Ethernet Server Adapter I350-T2
+Rev:	01
+NUMANode:	0
+

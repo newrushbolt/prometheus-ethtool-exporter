@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="igb56_int_tp",driver="igb",duplex="Unknown! (255)",firmware_version="1.67, 0x800010dd, 20.5.16",link_detected="no",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
+node_net_ethtool_info{device="igb56_int_tp",driver="igb",duplex="Unknown! (255)",firmware_version="1.67, 0x800010dd, 20.5.16",link_detected="no",model="Intel Corporation I350 Gigabit Network Connection",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
@@ -124,7 +124,21 @@ node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_bytes"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_drops"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_csum_err"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_alloc_failed"} 0.0
+# HELP node_net_ethtool_channels Ethtool number of channels
+# TYPE node_net_ethtool_channels gauge
+node_net_ethtool_channels{device="igb56_int_tp",type="other_max"} 1.0
+node_net_ethtool_channels{device="igb56_int_tp",type="combined_max"} 8.0
+node_net_ethtool_channels{device="igb56_int_tp",type="other_current"} 1.0
+node_net_ethtool_channels{device="igb56_int_tp",type="combined_current"} 8.0
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="igb56_int_tp",type="rx_max"} 4096.0
+node_net_ethtool_ring{device="igb56_int_tp",type="tx_max"} 4096.0
+node_net_ethtool_ring{device="igb56_int_tp",type="rx_current"} 256.0
+node_net_ethtool_ring{device="igb56_int_tp",type="tx_current"} 256.0
 # HELP node_net_ethtool_timestamp Collection timestamp
 # TYPE node_net_ethtool_timestamp gauge
 node_net_ethtool_timestamp{collector="interface_info",device="igb56_int_tp"} 1.678287354e+09
 node_net_ethtool_timestamp{collector="interface_statistics",device="igb56_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="channels",device="igb56_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="ring",device="igb56_int_tp"} 1.678287354e+09

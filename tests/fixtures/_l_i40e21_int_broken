@@ -1,0 +1,11 @@
+Channel parameters for i40e21_int_broken:
+Pre-set maximums:
+RX:		n/a
+TX:		n/a
+Other:		1
+Combined:	64
+Current hardware settings:
+RX:		n/a
+TX:		n/a
+Other:		1
+Combined:	32

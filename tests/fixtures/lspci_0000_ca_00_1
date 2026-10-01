@@ -1,0 +1,9 @@
+Slot:	ca:00.1
+Class:	Ethernet controller
+Vendor:	Broadcom Inc. and subsidiaries
+Device:	BCM57414 NetXtreme-E 10Gb/25Gb RDMA Ethernet Controller
+SVendor:	Broadcom Inc. and subsidiaries
+SDevice:	NetXtreme-E Dual-port 10Gb/25Gb SFP28 Ethernet OCP 3.0 Adapter
+Rev:	01
+NUMANode:	0
+

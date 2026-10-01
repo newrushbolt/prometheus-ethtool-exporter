@@ -1,0 +1,11 @@
+Ring parameters for igb56_int_tp:
+Pre-set maximums:
+RX:			4096
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			4096
+Current hardware settings:
+RX:			256
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			256

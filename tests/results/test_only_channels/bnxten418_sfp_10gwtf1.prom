@@ -1,0 +1,11 @@
+# HELP node_net_ethtool_channels Ethtool number of channels
+# TYPE node_net_ethtool_channels gauge
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="rx_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="tx_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="combined_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="rx_current"} 0.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="tx_current"} 0.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="combined_current"} 8.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="channels",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09

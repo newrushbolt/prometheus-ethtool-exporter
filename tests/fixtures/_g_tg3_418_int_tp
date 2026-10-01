@@ -1,0 +1,11 @@
+Ring parameters for tg3_418_int_tp:
+Pre-set maximums:
+RX:			511
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			511
+Current hardware settings:
+RX:			200
+RX Mini:		n/a
+RX Jumbo:		n/a
+TX:			511

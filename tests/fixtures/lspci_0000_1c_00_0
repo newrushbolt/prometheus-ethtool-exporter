@@ -1,0 +1,9 @@
+Slot:	1c:00.0
+Class:	Ethernet controller
+Vendor:	Intel Corporation
+Device:	Ethernet Connection X722 for 1GbE
+SVendor:	Super Micro Computer Inc
+SDevice:	Device 37d1
+Rev:	09
+NUMANode:	0
+

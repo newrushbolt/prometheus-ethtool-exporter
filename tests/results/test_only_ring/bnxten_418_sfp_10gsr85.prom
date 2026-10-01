@@ -1,0 +1,11 @@
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="rx_max"} 2047.0
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="rx_jumbo_max"} 8191.0
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="tx_max"} 2047.0
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="rx_current"} 2047.0
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="rx_jumbo_current"} 8188.0
+node_net_ethtool_ring{device="bnxten_418_sfp_10gsr85",type="tx_current"} 2047.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="ring",device="bnxten_418_sfp_10gsr85"} 1.678287354e+09

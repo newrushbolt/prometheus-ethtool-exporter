@@ -1,0 +1,9 @@
+Slot:	3b:00.1
+Class:	Ethernet controller
+Vendor:	Intel Corporation
+Device:	Ethernet Controller X710 for 10GbE SFP+
+SVendor:	Intel Corporation
+SDevice:	Ethernet Converged Network Adapter X710
+Rev:	02
+NUMANode:	0
+

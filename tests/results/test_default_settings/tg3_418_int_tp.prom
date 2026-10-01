@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="tg3_418_int_tp",driver="tg3",duplex="Unknown! (255)",firmware_version="FFV21.60.16 bc 5720-v1.39",link_detected="no",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
+node_net_ethtool_info{device="tg3_418_int_tp",driver="tg3",duplex="Unknown! (255)",firmware_version="FFV21.60.16 bc 5720-v1.39",link_detected="no",model="Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
@@ -81,7 +81,21 @@ node_net_ethtool{device="tg3_418_int_tp",type="nic_irqs"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="nic_avoided_irqs"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="nic_tx_threshold_hit"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="mbuf_lwm_thresh_hit"} 0.0
+# HELP node_net_ethtool_channels Ethtool number of channels
+# TYPE node_net_ethtool_channels gauge
+node_net_ethtool_channels{device="tg3_418_int_tp",type="rx_max"} 4.0
+node_net_ethtool_channels{device="tg3_418_int_tp",type="tx_max"} 4.0
+node_net_ethtool_channels{device="tg3_418_int_tp",type="rx_current"} 4.0
+node_net_ethtool_channels{device="tg3_418_int_tp",type="tx_current"} 1.0
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="tg3_418_int_tp",type="rx_max"} 511.0
+node_net_ethtool_ring{device="tg3_418_int_tp",type="tx_max"} 511.0
+node_net_ethtool_ring{device="tg3_418_int_tp",type="rx_current"} 200.0
+node_net_ethtool_ring{device="tg3_418_int_tp",type="tx_current"} 511.0
 # HELP node_net_ethtool_timestamp Collection timestamp
 # TYPE node_net_ethtool_timestamp gauge
 node_net_ethtool_timestamp{collector="interface_info",device="tg3_418_int_tp"} 1.678287354e+09
 node_net_ethtool_timestamp{collector="interface_statistics",device="tg3_418_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="channels",device="tg3_418_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="ring",device="tg3_418_int_tp"} 1.678287354e+09

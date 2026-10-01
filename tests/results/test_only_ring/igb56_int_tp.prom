@@ -1,0 +1,9 @@
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="igb56_int_tp",type="rx_max"} 4096.0
+node_net_ethtool_ring{device="igb56_int_tp",type="tx_max"} 4096.0
+node_net_ethtool_ring{device="igb56_int_tp",type="rx_current"} 256.0
+node_net_ethtool_ring{device="igb56_int_tp",type="tx_current"} 256.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="ring",device="igb56_int_tp"} 1.678287354e+09

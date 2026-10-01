@@ -40,6 +40,9 @@ class TestEthtoolCollector:
         "collect_interface_statistics": True,
         "collect_interface_info": True,
         "collect_sfp_diagnostics": True,
+        "collect_nic_model": True,
+        "collect_channels": True,
+        "collect_ring": True,
         "summarize_queues": True,
         "textfile_name": "/dev/null",
         "sys_class_net_path": ".tests/sys_class_net"
@@ -62,11 +65,11 @@ class TestEthtoolCollector:
 
 
 
-    def check_exporter(self, current_func_name, custom_args_dict={}, nic_type=None):
+    def check_exporter(self, current_func_name, custom_args_dict={}, nic_type=None, lspci_path="tests/stub_lspci.sh"):
         collector_args_dict = {**self.default_args_dict, **custom_args_dict}
         collector_args = Namespace(**collector_args_dict)
 
-        ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
+        ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh", lspci_path)
 
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
@@ -103,6 +106,7 @@ class TestEthtoolCollector:
         [
             {
                 "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": True,
+                "collect_channels": False, "collect_ring": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -117,6 +121,7 @@ class TestEthtoolCollector:
         [
             {
                 "collect_interface_statistics": False, "collect_interface_info":True, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -131,6 +136,7 @@ class TestEthtoolCollector:
         [
             {
                 "collect_interface_statistics": True, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -145,6 +151,7 @@ class TestEthtoolCollector:
         [
             {
                 "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": False,
                 "interface_regex": 'i40e28_sfp_10gsr85'
             }
         ]
@@ -152,6 +159,96 @@ class TestEthtoolCollector:
     def test_no_enabled_collectors(self, custom_args):
         current_func_name = inspect.currentframe().f_code.co_name
         _collector,_registry = self.check_exporter(current_func_name, custom_args)
+
+
+    @pytest.mark.parametrize("nic_type", default_nic_types)
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_channels": True, "collect_ring": False,
+            }
+        ]
+    )
+    def test_only_channels(self, nic_type, custom_args):
+        custom_args = {**custom_args, "interface_regex": nic_type}
+        current_func_name = inspect.currentframe().f_code.co_name
+        _collector,_registry = self.check_exporter(current_func_name, custom_args, nic_type)
+
+
+    @pytest.mark.parametrize("nic_type", default_nic_types)
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "collect_interface_statistics": False, "collect_interface_info":False, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": True,
+            }
+        ]
+    )
+    def test_only_ring(self, nic_type, custom_args):
+        custom_args = {**custom_args, "interface_regex": nic_type}
+        current_func_name = inspect.currentframe().f_code.co_name
+        _collector,_registry = self.check_exporter(current_func_name, custom_args, nic_type)
+
+
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "collect_interface_statistics": False, "collect_interface_info":True, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": False, "collect_nic_model": False,
+                "interface_regex": 'i40e28_sfp_10gsr85'
+            }
+        ]
+    )
+    def test_no_nic_model(self, custom_args):
+        current_func_name = inspect.currentframe().f_code.co_name
+        _collector,_registry = self.check_exporter(current_func_name, custom_args)
+
+
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "collect_interface_statistics": False, "collect_interface_info":True, "collect_sfp_diagnostics": False,
+                "collect_channels": False, "collect_ring": False,
+                "interface_regex": 'i40e28_sfp_10gsr85'
+            }
+        ]
+    )
+    def test_absent_lspci(self, custom_args, caplog):
+        # Model label is just missing, output is the same as with collect_nic_model disabled
+        collector, registry = self.check_exporter("test_no_nic_model", custom_args, lspci_path="/whatever/lspci")
+        assert collector.lspci is None
+        assert "Cannot run /whatever/lspci, NIC model won't be collected" in caplog.text
+        # lspci isn't retried once it's known to be missing
+        caplog.clear()
+        write_to_textfile(".tests/test_absent_lspci.prom", registry)
+        assert "lspci" not in caplog.text
+
+
+    @pytest.mark.parametrize("bus_info", ["", "N/A", "usb-0000:00:14.0-1", "platform"])
+    def test_nic_model_non_pci_bus(self, bus_info):
+        collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh", "tests/stub_lspci.sh")
+        assert collector.get_nic_model(bus_info) is None
+
+
+    def test_nic_model_failed_lspci(self, caplog):
+        # Stub has no fixture for this bus, so it fails
+        collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh", "tests/stub_lspci.sh")
+        assert collector.get_nic_model("0000:ff:00.0") is None
+        assert "lspci failed for bus <0000:ff:00.0>" in caplog.text
+
+
+    def test_nic_model_unparseable_lspci(self, tmp_path, caplog):
+        broken_lspci = tmp_path / "lspci"
+        broken_lspci.write_text('#! /bin/bash\nprintf "Slot:\\t3b:00.1\\nClass:\\tEthernet controller\\n"\n')
+        broken_lspci.chmod(0o755)
+        collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh", str(broken_lspci))
+        assert collector.get_nic_model("0000:3b:00.1") is None
+        assert "Failed to parse lspci output for bus <0000:3b:00.1>" in caplog.text
 
 
     @pytest.mark.parametrize(
@@ -240,7 +337,7 @@ class TestEthtoolCollector:
         textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
         write_to_textfile(textfile_name, registry)
         log_lines = caplog.text.splitlines()
-        assert len(log_lines) == 3
+        assert len(log_lines) == 5
 
         assert 'Cannot get interface_info: Exception:' in log_lines[0]
         assert 'Ethtool with keys <> failed for interface <i40e28_sfp_non_existent>' in log_lines[0]
@@ -249,6 +346,11 @@ class TestEthtoolCollector:
         assert 'Ethtool with keys <-m> failed for interface <i40e28_sfp_non_existent>' in log_lines[1]
 
         assert 'Cannot get interface_statistics: UnicodeDecodeError:' in log_lines[2]
+
+        assert 'Cannot get channels: ' in log_lines[3]
+
+        assert 'Cannot get ring: Exception:' in log_lines[4]
+        assert 'Ethtool with keys <-g> failed for interface <i40e28_sfp_non_existent>' in log_lines[4]
 
     def test_unfindable_ethtool(self):
         from ethtool_exporter import _get_ethtool_path

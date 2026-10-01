@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="bnxten418_sfp_10gwtf1",driver="bnxt_en",duplex="Full",firmware_version="220.0.57.0/pkg 22.00.07.60",link_detected="yes",port="FIBRE",speed="10000000000.0",version="4.18.0-408.el8.x86_64"} 1.0
+node_net_ethtool_info{device="bnxten418_sfp_10gwtf1",driver="bnxt_en",duplex="Full",firmware_version="220.0.57.0/pkg 22.00.07.60",link_detected="yes",model="Broadcom Inc. and subsidiaries BCM57414 NetXtreme-E 10Gb/25Gb RDMA Ethernet Controller",port="FIBRE",speed="10000000000.0",version="4.18.0-408.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
@@ -404,7 +404,25 @@ node_net_ethtool{device="bnxten418_sfp_10gwtf1",queue="0",type="tx_packets_pri4"
 node_net_ethtool{device="bnxten418_sfp_10gwtf1",queue="0",type="tx_packets_pri5"} 0.0
 node_net_ethtool{device="bnxten418_sfp_10gwtf1",queue="0",type="tx_packets_pri6"} 0.0
 node_net_ethtool{device="bnxten418_sfp_10gwtf1",queue="0",type="tx_packets_pri7"} 0.0
+# HELP node_net_ethtool_channels Ethtool number of channels
+# TYPE node_net_ethtool_channels gauge
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="rx_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="tx_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="combined_max"} 74.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="rx_current"} 0.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="tx_current"} 0.0
+node_net_ethtool_channels{device="bnxten418_sfp_10gwtf1",type="combined_current"} 8.0
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="rx_max"} 2047.0
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="rx_jumbo_max"} 8191.0
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="tx_max"} 2047.0
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="rx_current"} 511.0
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="rx_jumbo_current"} 2044.0
+node_net_ethtool_ring{device="bnxten418_sfp_10gwtf1",type="tx_current"} 511.0
 # HELP node_net_ethtool_timestamp Collection timestamp
 # TYPE node_net_ethtool_timestamp gauge
 node_net_ethtool_timestamp{collector="interface_info",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09
 node_net_ethtool_timestamp{collector="interface_statistics",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="channels",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="ring",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09

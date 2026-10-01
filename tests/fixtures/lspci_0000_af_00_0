@@ -1,0 +1,9 @@
+Slot:	af:00.0
+Class:	Ethernet controller
+Vendor:	Intel Corporation
+Device:	82599ES 10-Gigabit SFI/SFP+ Network Connection
+SVendor:	Intel Corporation
+SDevice:	Ethernet Server Adapter X520-2
+Rev:	01
+NUMANode:	0
+

@@ -1,0 +1,18 @@
+Ring parameters for bnxten_418_sfp_10gsr85:
+Pre-set maximums:
+RX:			2047
+RX Mini:		n/a
+RX Jumbo:		8191
+TX:			2047
+TX push buff len:	n/a
+Current hardware settings:
+RX:			2047
+RX Mini:		n/a
+RX Jumbo:		8188
+TX:			2047
+RX Buf Len:		n/a
+CQE Size:		n/a
+TX Push:		off
+RX Push:		off
+TX push buff len:	n/a
+TCP data split:		n/a

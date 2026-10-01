@@ -31,7 +31,7 @@ def error_with_nice_trace(logger: Logger, msg: str, exc: Exception):
 class EthtoolCollector:
     """Collect ethtool metrics,publish them via http or save them to a file."""
 
-    def __init__(self, args: Namespace, ethtool_path: str = "ethtool"):
+    def __init__(self, args: Namespace, ethtool_path: str = "ethtool", lspci_path: Optional[str] = "lspci"):
         """Construct the object and parse the arguments."""
         self.basic_info_whitelist = (
             "speed",
@@ -104,7 +104,13 @@ class EthtoolCollector:
             for alarm in self.xcvr_alarms_ext
         ]
 
+        self.hw_params_sections = {
+            "Pre-set maximums": "max",
+            "Current hardware settings": "current",
+        }
+
         self.ethtool = ethtool_path
+        self.lspci = lspci_path
         self.args: Namespace = args
         self.logger: Logger = self._setup_logger()
 
@@ -269,6 +275,7 @@ class EthtoolCollector:
             labels[key] = value
 
         driver_data_fields = ["driver", "version", "firmware_version"]
+        bus_info = None
         for raw_line in driver_data.decode("utf-8").splitlines():
             try:
                 line = raw_line.strip()
@@ -278,11 +285,82 @@ class EthtoolCollector:
                 key, value = key_val
                 if key in driver_data_fields:
                     labels[key] = value
+                elif key == "bus_info":
+                    bus_info = value
             # TODO: Have no idea how to get into this branch
             except Exception:   # pragma: no cover
                 self.logger.warning('Failed to parse driver info in: %s', raw_line)
                 continue
+
+        if self.args.collect_nic_model and bus_info:
+            model = self.get_nic_model(bus_info)
+            if model:
+                labels["model"] = model
         info.add_metric(labels.values(), labels)
+
+    def get_nic_model(self, bus_info: str) -> Optional[str]:
+        """Get the NIC model as displayed by lspci.
+
+        :param bus_info: PCI address of the NIC: '0000:3b:00.1'
+        :return: Device name: "Intel Corporation Ethernet Controller X710 for 10GbE SFP+"
+        """
+        if not self.lspci:
+            return None
+        # bus-info can also be empty, 'N/A', or not a pci device 'usb-0000:00:14.0-1'
+        if not re.match(r"^([0-9a-fA-F]{4}:)?[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$", bus_info):
+            self.logger.debug(f"Bus info <{bus_info}> is not a PCI address, skipping NIC model")
+            return None
+        command = [self.lspci, "-vmm", "-s", bus_info]
+        try:
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
+        except (FileNotFoundError, PermissionError) as err:
+            self.logger.warning(f"Cannot run {self.lspci}, NIC model won't be collected: {err}")
+            self.lspci = None
+            return None
+        data, err = proc.communicate()
+        if proc.returncode != 0 or not data:
+            self.logger.warning(f"lspci failed for bus <{bus_info}>: {err}")
+            return None
+        # One "Key:<tab>value" per line:
+        # Vendor:	Intel Corporation
+        # Device:	Ethernet Controller X710 for 10GbE SFP+
+        fields = {}
+        for line in data.decode("utf-8").splitlines():
+            key, _, value = line.partition(":")
+            fields[key.strip()] = value.strip()
+        if not fields.get("Vendor") or not fields.get("Device"):
+            self.logger.warning(f"Failed to parse lspci output for bus <{bus_info}>: {data}")
+            return None
+        return f"{fields['Vendor']} {fields['Device']}"
+
+    def update_hw_params(self, interface: str, parameter: str, gauge: GaugeMetricFamily):
+        """Update gauge with parameters from ethtool --show-channels or --show-ring.
+
+        :param interface: Name of network interface.
+        :param parameter: Ethtool parameter, "-l" for channels or "-g" for rings.
+        :param gauge: Metric to put the data in.
+        """
+        data = self.run_ethtool(interface, parameter)
+        if not data:
+            return
+
+        setting = None
+        for line in data.decode("utf-8").splitlines():
+            line = line.strip()
+            # drop empty lines and the header, i.e. "Ring parameters for eth0:"
+            if not line or " parameters for " in line:
+                continue
+            key, _, value = line.partition(":")
+            value = value.strip()
+            if key in self.hw_params_sections:
+                setting = self.hw_params_sections[key]
+                continue
+            if not setting or not value or value == "n/a":
+                continue
+            try:
+                gauge.add_metric([interface, f"{self._clean_label_key(key)}_{setting}"], float(value))
+            except ValueError:
+                self.logger.debug(f"Invalid parameter value: <{line}>")
 
     def _parse_key_value_line(self, line) -> Optional[List[str]]:
         """Parse key: value from line if possible.
@@ -484,6 +562,34 @@ class EthtoolCollector:
                     error_with_nice_trace(self.logger, "Cannot get interface_statistics", exc)
             yield gauge
 
+        if self.args.collect_channels:
+            channels = GaugeMetricFamily(
+                "node_net_ethtool_channels",
+                "Ethtool number of channels",
+                labels=["device", "type"],
+            )
+            for interface in list(self.find_physical_interfaces()):
+                try:
+                    self.update_hw_params(interface, "-l", channels)
+                    self.update_collection_timestamp(interface, collection_timestamps, 'channels')
+                except Exception as exc:
+                    error_with_nice_trace(self.logger, "Cannot get channels", exc)
+            yield channels
+
+        if self.args.collect_ring:
+            ring = GaugeMetricFamily(
+                "node_net_ethtool_ring",
+                "Ethtool ring parameters",
+                labels=["device", "type"],
+            )
+            for interface in list(self.find_physical_interfaces()):
+                try:
+                    self.update_hw_params(interface, "-g", ring)
+                    self.update_collection_timestamp(interface, collection_timestamps, 'ring')
+                except Exception as exc:
+                    error_with_nice_trace(self.logger, "Cannot get ring", exc)
+            yield ring
+
         if self.args.textfile_name:
             yield collection_timestamps
 
@@ -558,6 +664,24 @@ def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
         action="store_true",
         default=True,
         help="Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible",
+    )
+    parser.add_argument(
+        "--collect-nic-model",
+        action="store_true",
+        default=True,
+        help="Add NIC model from `lspci` to interface info, requires --collect-interface-info",
+    )
+    parser.add_argument(
+        "--collect-channels",
+        action="store_true",
+        default=True,
+        help="Collect interface channels from `ethtool --show-channels <interface_name>`",
+    )
+    parser.add_argument(
+        "--collect-ring",
+        action="store_true",
+        default=True,
+        help="Collect interface ring parameters from `ethtool --show-ring <interface_name>`",
     )
     group.add_argument(
         "-f",
@@ -651,6 +775,10 @@ def _get_ethtool_path():
         exit("Error: cannot find ethtool.")
     return ethtool # pragma: no cover
 
+def _get_lspci_path() -> Optional[str]:
+    path = ":".join([os.environ.get("PATH", ""), "/usr/sbin", "/sbin"])
+    return which("lspci", path=path)
+
 
 def main():  # pragma: no cover
     def handle_sigterm(*_):
@@ -663,7 +791,10 @@ def main():  # pragma: no cover
 
     # Create new instance of EthtoolCollector.
     ethtool_path = _get_ethtool_path()
-    collector = EthtoolCollector(ethtool_collector_args, ethtool_path)
+    lspci_path = _get_lspci_path()
+    collector = EthtoolCollector(ethtool_collector_args, ethtool_path, lspci_path)
+    if collector.args.collect_nic_model and not lspci_path:
+        collector.logger.warning("Cannot find lspci, NIC model won't be collected")
     collector.logger.debug("Starting ethtool-collector")
 
     # Create registry for metrics and assign collector.
@@ -684,14 +815,17 @@ def main():  # pragma: no cover
         ip = ip.replace("[", "").replace("]", "")
         collector.logger.debug(f"Serving metrics on {ip}:{port}")
 
-        server, thread_obj = start_http_server(port, ip, registry=registry)
+        # On debian buster and bookworm, prometheus_client returns None rather than (server, thread)
+        result = start_http_server(int(port), ip, registry=registry)
         while True:
             try:
                 sleep(1)
             except (KeyboardInterrupt, SystemExit):
                 break
-        server.shutdown()
-        thread_obj.join(1.0)
+        if result is not None:
+            server, thread_obj = result
+            server.shutdown()
+            thread_obj.join(1.0)
         exit(0)
 
     # If arguments for serving to file are present we use them.

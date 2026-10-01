@@ -1,0 +1,8 @@
+Slot:	04:00.0
+Class:	Ethernet controller
+Vendor:	Broadcom Inc. and subsidiaries
+Device:	NetXtreme BCM5720 Gigabit Ethernet PCIe
+SVendor:	Dell
+SDevice:	BCM5720 2-port Gigabit Ethernet PCIe
+NUMANode:	0
+

@@ -1,0 +1,8 @@
+# HELP node_net_ethtool_ring Ethtool ring parameters
+# TYPE node_net_ethtool_ring gauge
+node_net_ethtool_ring{device="i40e21_int_broken",type="rx_max"} 4096.0
+node_net_ethtool_ring{device="i40e21_int_broken",type="rx_current"} 512.0
+node_net_ethtool_ring{device="i40e21_int_broken",type="tx_current"} 512.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="ring",device="i40e21_int_broken"} 1.678287354e+09

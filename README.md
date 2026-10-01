@@ -21,6 +21,7 @@ on disk in a .prom file either periodically or just once, and run it from cron o
 usage: ethtool_exporter.py [-h]  [--debug] [-q]
                            [--summarize-queues]
                            [--collect-interface-statistics] [--collect-interface-info] [--collect-sfp-diagnostics]
+                           [--collect-nic-model] [--collect-channels] [--collect-ring]
                            (-f TEXTFILE_NAME | -l LISTEN | -p PORT) [-L LISTEN_ADDRESS] [-1]
                            [-i INTERVAL] [-I INTERFACE_REGEX]
                            [-w WHITELIST_REGEX | -b BLACKLIST_REGEX]
@@ -36,6 +37,12 @@ optional arguments:
                         Collect interface common info from `ethtool <interface_name>`
   --collect-sfp-diagnostics
                         Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible
+  --collect-nic-model
+                        Add NIC model from `lspci` to interface info, requires --collect-interface-info
+  --collect-channels
+                        Collect interface channels from `ethtool --show-channels <interface_name>`
+  --collect-ring
+                        Collect interface ring parameters from `ethtool --show-ring <interface_name>`
   -f TEXTFILE_NAME, --textfile-name TEXTFILE_NAME
                         Full file path where to store data for node collector to pick up
   -l LISTEN, --listen LISTEN
